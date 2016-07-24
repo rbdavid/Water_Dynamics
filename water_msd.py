@@ -9,7 +9,6 @@ import numpy as np
 from numpy.linalg import *
 import MDAnalysis
 from MDAnalysis.analysis.align import *
-from MDAnalysis.analysis.rms import *
 import sys
 import os
 from pocket_residues import *
@@ -23,7 +22,6 @@ system = sys.argv[3]
 
 zeros = np.zeros
 dot_prod = np.dot
-rmsd = MDAnalysis.analysis.rms.rmsd
 sqrt = np.sqrt
 flush = sys.stdout.flush
 
@@ -36,7 +34,21 @@ def ffprint(string):
 
 def summary(nSteps):
 	sum_file = open('%s.diffusion.summary' %(system),'w')
-	...
+	sum_file.write('Using MDAnalysis version: %s\n' %(MDAnalysis.version.__version__))
+	sum_file.write('To recreate this analysis, run this line:\n')
+	for i in range(len(sys.argv)):
+		sum_file.write('%s ' %(sys.argv[i]))
+	sum_file.write('\n\n')
+	sum_file.write('Reprinting the pocket_residues.py script for recreating this analysis:\n')
+	sum_file.write("wat_resname = '%s'\n pocket_sel = '%s'\n radius = %f" %(wat_resname,pocket_sel,radius)) 
+	sum_file.write('\n\n')
+	sum_file.write('Output files are:\n')
+	sum_file.write('	%s.nRes.dat 		--> holds the number of residues within the defined pocket\n' %(system))
+	sum_file.write('	%s.waters.dat 		--> holds the atom numbers of the water oxygens that are within the defined pocket\n' %(system))
+	sum_file.write('	%s.cog.xyz		--> A XYZ trajectory of the Center Of Geometry (COG) of the defined pocket; waters within radius of this point are considered within the defined pocket; Note you should always check that the radius is accurately describing all timesteps in your trajectory...\n' %(system))
+	sum_file.write('	%s.msd.pocket.dat 	--> holds the dt, counts, <MSD>, and <MSD^2> data of waters within the defined pocket\n' %(system))
+	sum_file.write('	%s.long_lived.dat	--> outputs a vmd atomselection to use to show the long lived waters in the un-truncated trajectories\n' %(system))
+	sum_file.close()
 
 # ----------------------------------------
 # MAIN:
@@ -45,13 +57,13 @@ ffprint('Loading Reference Structure')
 ref = MDAnalysis.Universe(pdb_file)
 ref_all = ref.select_atoms('all')
 ref_pocket = ref.select_atoms(pocket_sel)
-ref_all.translate(-ref_pocket.center_of_geometry())		### NEED TO DECIDE WHETHER TO align the betas or the pocket residues... DECIDE IF THE ORIGIN should be placed at the center of the pocket or alignment landmark...
+ref_all.translate(-ref_pocket.center_of_geometry())		
 ref0 = ref_pocket.positions
 
 ffprint('Loading Analysis Universe')
 u = MDAnalysis.Universe(pdb_file,traj_file)
 u_all = u.select_atoms('all')
-wat = u.select_atoms(wat_resname)		### NEED TO CREATE A VARIABLE WITH THE CORRECT ATOM SELECTION FOR THE WATER RESIDUES...
+wat = u.select_atoms(wat_resname)		
 u_pocket = u.select_atoms(pocket_sel)
 
 nSteps = len(u.trajectory)			# number of steps
@@ -172,7 +184,7 @@ for i in range(nWats):
 #				dt+=1
 
 ffprint('Finished with dist2 calculations. Beginning to average and print out msd values')
-msd_file = open('msd.pocket.dat','w')
+msd_file = open('%s.msd.pocket.dat' %(system),'w')
 
 for i in range(1,nSteps):
 	if msd[i,0]>1.0:
