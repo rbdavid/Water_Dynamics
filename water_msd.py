@@ -202,3 +202,5 @@ for i in range(len(ll_list)):
 nf.write('\n')
 nf.close()
 
+summary(nSteps)
+
