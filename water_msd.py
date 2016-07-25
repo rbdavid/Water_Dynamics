@@ -12,6 +12,7 @@ import MDAnalysis
 from MDAnalysis.analysis.align import *
 import sys
 import os
+from distance_functions import *
 from pocket_residues import *
 
 # ----------------------------------------
@@ -60,7 +61,6 @@ ref = MDAnalysis.Universe(prmtop_file,pdb_file)
 ref_all = ref.select_atoms('all')
 ref_pocket = ref.select_atoms(pocket_sel)
 ref_wat = ref.select_atoms(wat_resname)
-print ref_wat.n_residues, ref_wat.n_atoms
 ref_all.translate(-ref_pocket.center_of_geometry())		
 ref0 = ref_pocket.positions
 
@@ -70,13 +70,10 @@ u_all = u.select_atoms('all')
 wat = u.select_atoms(wat_resname)
 u_pocket = u.select_atoms(pocket_sel)
 
-nSteps = len(u.trajectory)			# number of steps
+nSteps = len(u.trajectory)		# number of steps
 nWats = wat.n_residues			# number of water residues
 nAtoms = wat.n_atoms			# number of atoms in water selection...
 nAtoms0 = wat.atoms[0].index		# atoms.index is 0 indexed, so leave as is...
-nWats0 = wat.residues[0].resid-1	# residues.resid is 1 indexed, so need to subtract 1 to make it zero indexed
-#print nWats, nAtoms
-#print nWats0, nAtoms0
 
 if nWats*3 != nAtoms:
 	ffprint('Something is fucked up. Selection issues. nWats*3 != nAtoms...')
@@ -84,7 +81,6 @@ if nWats*3 != nAtoms:
 
 # Memory Declaration
 allCoord = zeros((nSteps,nAtoms,3),dtype=np.float64)	# array holding all xyz data for all atoms in the system
-#binary = zeros((nSteps,nWats),dtype=int)		# array holding the binary (yes or no) data about water residues within the distance cutoff for being present within the binding pocket
 msd = zeros((nSteps,3),dtype=np.float64)		# array holding the msd data
 
 # File Declaration
@@ -118,27 +114,22 @@ for ts in u.trajectory:
 	x,y,z = u_pocket.center_of_geometry()
 	pocket_waters = u.select_atoms('%s and byres point %s %s %s %d' %(wat_resname,x,y,z,radius)) # Atom selection for the waters within radius angstroms of the COG of the pocket	### CHECK THAT THIS ATOM SELECTION STILL WORKS
 	
-	nRes = len(pocket_waters.residues)
+	nRes = pocket_waters.n_residues
 	num_atoms = nRes*3
 	nRes_file.write('%d\n' %(nRes))		# Outputting the number of water residues at timestep ts
 	time = ts.frame-1
 	for i in range(num_atoms):
 		atom = pocket_waters.atoms[i]
-		atom_num = atom.number
+		atom_num = atom.index
 		zeroed_atom_num = atom_num-nAtoms0
-		allCoord[time,zeroed_atom_num,:] = atom.positions	# Saving xyz coordinates of pocket waters to the allCoord array   ### NEED TO CHECK THAT THIS INDEXING WORKS
+		allCoord[time,zeroed_atom_num,:] = atom.position	# Saving xyz coordinates of pocket waters to the allCoord array   ### NEED TO CHECK THAT THIS INDEXING WORKS
 		if i%3 == 0:
 			res_num.write('%d   ' %(atom_num))
-		res_num.write('\n')
+	res_num.write('\n')
 
-#	for i in range(num_atoms):
-#		allCoord[ts.frame-1,pocket_waters.atoms[i].number-nAtoms0,:] = pocket_waters.atoms[i].positions	# Saving xyz coordinates of pocket waters to the allCoord array   ### NEED TO CHECK THAT THIS INDEXING WORKS
-#
-#	for i in range(0,num_atom,3):
-#		binary[ts.frame-1, int((pocket_waters.atoms[i].number-nAtoms0)/3)] = 1		# Saving data to the binary array; ts.frame -1 is the correct index for the time frame; int(...)-nAtoms/3 corresponds to the correct index for the specific TIP3 water residue 		### NEED TO CHECK THAT THIS INDEXING WORKS
-#		res_num.write('%d    ' %(pocket_waters.atoms[i].number))			# Saving the atom number of the oxygen atom for the corresponding TIP3 residue
-#	res_num.write('\n')
-
+nRes_file.close()
+res_num.close()
+COG_file.close()
 ffprint('Done with saving coordinates of waters within the pocket, writing COG traj, etc...')
 
 # Analyze Binary to determine which residues/timesteps are to be analyzed and perform dist2 analysis
@@ -149,45 +140,20 @@ for i in range(nWats):
 	for j in range(nSteps):
 		if allCoord[j,temp,0] != 0:
 			dt=1
-			pos0 = zeros((3,3),dtype=float)
-			pos0 = allCoord[j,temp:temp+2,:]		### NEED to check that this data structure works well for the MSD function (distance_functions); also, that the indexing works to grab the correct data from allCoord
+			pos0 = zeros((3,3),dtype=float)			### IS THIS LINE NEEDED ACTUALLY??? I NEED TO FIGURE THIS OUT ONCE AND FOR ALL...
+			pos0 = allCoord[j,temp:temp+3,:]
+
 			while (j+dt)<nSteps and allCoord[j+dt,temp,0] != 0:
 				if dt > 200:
 					long_lived.add(temp+nAtoms0)
-				pos1 = zeros((3,3),dtype=float)
-				pos1 = allCoord[j+dt,temp:temp+2,:]	### NEED to check that this data structure works well for the MSD function (distance_functions); also, that the indexing works to grab the correct data from allCoord
+				pos1 = zeros((3,3),dtype=float)		### IS THIS LINE NEEDED ACTUALLY??? I NEED TO FIGURE THIS OUT ONCE AND FOR ALL...
+				pos1 = allCoord[j+dt,temp:temp+3,:]
 				dist2=0.
-				dist2 = MSD(pos0,pos1,3)	### NEED TO CHECK THAT THIS CALC GIVES THE SAME VALUE AS THE PREVIOUS VERSION
+				dist2 = MSD(pos0,pos1,3)
 				msd[dt,0]+=1
 				msd[dt,1]+= dist2
 				msd[dt,2]+= dist2**2
 				dt+=1
-
-#		if binary[j,i]==1:
-#			dt=1
-#			temp = 3*i
-#			pos0 = zeros((3,3),dtype=float)
-#			pos0 = allCoord[j,temp:temp+2,:]		### NEED to check that this data structure works well for the MSD function (distance_functions); also, that the indexing works to grab the correct data from allCoord
-			
-#			while (j+dt)<nSteps and binary[j+dt,i]==1:
-#				if dt > 200:
-#					atom_num = 3*i + nAtoms0
-#					long_lived.add(atom_num)
-#				pos1 = zeros((3,3),dtype=float)
-#				pos1 = allCoord[j+dt,temp:temp+2,:]	### NEED to check that this data structure works well for the MSD function (distance_functions); also, that the indexing works to grab the correct data from allCoord
-#				dist2=0.
-#				
-#				#for k in range(3):		# loop through atoms of residue, i; assume that the residue has only three atoms (which is true for TIP3 water)
-#				#	temp = 0.0
-#				#	for l in range(3):
-#				#		temp = pos1[k,l] - pos0[k,l]
-#				#		dist2 += temp*temp
-#				#dist2 /= 3.0
-#				dist2 = MSD(pos0,pos1,3)	### NEED TO CHECK THAT THIS CALC GIVES THE SAME VALUE AS THE PREVIOUS VERSION
-#				msd[dt,0]+=1
-#				msd[dt,1]+= dist2
-#				msd[dt,2]+= dist2**2
-#				dt+=1
 
 ffprint('Finished with dist2 calculations. Beginning to average and print out msd values')
 msd_file = open('%s.msd.pocket.dat' %(system),'w')
