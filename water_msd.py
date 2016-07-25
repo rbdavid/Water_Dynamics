@@ -1,4 +1,5 @@
-#!/mnt/lustre_fs/users/mjmcc/apps/python2.7/bin/python
+#!/Library/Frameworks/Python.framework/Versions/2.7/bin/python
+##!/mnt/lustre_fs/users/mjmcc/apps/python2.7/bin/python
 # ----------------------------------------
 # USAGE:
 
@@ -17,8 +18,9 @@ from pocket_residues import *
 # VARIABLE DECLARATION
 
 pdb_file = sys.argv[1]
-traj_file = sys.argv[2]
-system = sys.argv[3]
+prmtop_file = sys.argv[2]
+traj_file = sys.argv[3]
+system = sys.argv[4]
 
 zeros = np.zeros
 dot_prod = np.dot
@@ -54,23 +56,27 @@ def summary(nSteps):
 # MAIN:
 
 ffprint('Loading Reference Structure')
-ref = MDAnalysis.Universe(pdb_file)
+ref = MDAnalysis.Universe(prmtop_file,pdb_file)
 ref_all = ref.select_atoms('all')
 ref_pocket = ref.select_atoms(pocket_sel)
+ref_wat = ref.select_atoms(wat_resname)
+print ref_wat.n_residues, ref_wat.n_atoms
 ref_all.translate(-ref_pocket.center_of_geometry())		
 ref0 = ref_pocket.positions
 
 ffprint('Loading Analysis Universe')
-u = MDAnalysis.Universe(pdb_file,traj_file)
+u = MDAnalysis.Universe(prmtop_file,traj_file)
 u_all = u.select_atoms('all')
-wat = u.select_atoms(wat_resname)		
+wat = u.select_atoms(wat_resname)
 u_pocket = u.select_atoms(pocket_sel)
 
 nSteps = len(u.trajectory)			# number of steps
-nWats = len(wat.residues)			# number of water residues
-nAtoms = len(wat.atoms)			# number of atoms in water selection...
-nAtoms0 = wat.atoms[0].number		### NEED TO CHECK THAT THESE TWO LINES WILL WORK...
-nWats0 = wat.residues[0].resnum
+nWats = wat.n_residues			# number of water residues
+nAtoms = wat.n_atoms			# number of atoms in water selection...
+nAtoms0 = wat.atoms[0].index		# atoms.index is 0 indexed, so leave as is...
+nWats0 = wat.residues[0].resid-1	# residues.resid is 1 indexed, so need to subtract 1 to make it zero indexed
+#print nWats, nAtoms
+#print nWats0, nAtoms0
 
 if nWats*3 != nAtoms:
 	ffprint('Something is fucked up. Selection issues. nWats*3 != nAtoms...')
@@ -100,7 +106,7 @@ for ts in u.trajectory:
 	dims2 = dims/2.0
 	# Fix the wrapping issues
 	for i in range(0,nAtoms,3):
-		temp = wat.atoms[i].positions
+		temp = wat.atoms[i].position
 		t = wrapping(temp,dims,dims2)
 		# translate the atoms of the residue using the translational matrix
 		wat.atoms[i:i+3].translate(t)
