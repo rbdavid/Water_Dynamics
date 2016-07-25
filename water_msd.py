@@ -60,7 +60,6 @@ ffprint('Loading Reference Structure')
 ref = MDAnalysis.Universe(prmtop_file,pdb_file)
 ref_all = ref.select_atoms('all')
 ref_pocket = ref.select_atoms(pocket_sel)
-ref_wat = ref.select_atoms(wat_resname)
 ref_all.translate(-ref_pocket.center_of_geometry())		
 ref0 = ref_pocket.positions
 
