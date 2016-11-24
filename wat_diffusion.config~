@@ -1,0 +1,36 @@
+# NECESSARY PARAMETERS
+pdb_file = 
+prmtop_file = 
+traj_file = 
+wat_resname = 
+pocket_selection = 
+radius = 
+number_of_wats_filename = 	# File to print out the number of residues within the binding pocket
+wat_atom_nums_filename = 	# File to print out the atom numbers of the oxygen atom of TIP3 residues within the binding pocket selection
+center_of_geometry_filename = 	# File to print a vmd xyz trajectory showing the motion of the COG of the binding pocket selection
+water_OH_bond_dist =   
+
+
+# WOULD BE COOL TO CREATE THE VIS STATE TO VISUALIZE THE BINDING POCKET WITH THE APPROPRIATE RADIUS...
+
+
+ref_pdb = '../truncated.pdb' 		# Local or Global position of the pdb file of the average structure of the system to be analzyed
+pdb = '../truncated.pdb'	# Local or Global position of a pdb file of the MD system that will be analyzed
+traj_loc = '../../Trajectories/'	# Local or Global position of the directory where trajectories are located
+start = AAA		# the integer of the trajectory that will be first to be analyzed
+end = BBB		# the integer of the trajectory that will be last to be analyzed
+Wrapped = True
+outputname = 'XXX.YYY.amber_apo.rmsd.dat'
+selection_file = 'selection_list.py'
+
+# OPTIONAL PARAMETERS
+# ATOM SELECTION PARAMETERS
+alignment = 'protein and name CA and (resid 20:25 50:55 73:75 90:94 112:116 142:147 165:169 190:194 214:218 236:240 253:258 303:307)'
+substrates = 'nucleic or resname A3 A5 U3 U3 G5 G3 C5 C3 atp adp PHX MG'
+homemade_selections = ['A5','A3','A','G5','G3','G','C5','C3','C','T5','T3','T','U5','U3','U','atp','adp','PHX','MG']
+
+# OUTPUT PARAMETERS
+write_summary = True		# Boolean value; if True, the script will print out a summary file that breaks down the parameters used in the analysis and how to rerun the same analysis
+summary_filename = 'XXX.YYY.amber_apo.rmsd'
+selection_output = 'selection_list.out'
+
