@@ -15,18 +15,17 @@ import os
 from distance_functions import *
 from pocket_residues import *
 
-# ----------------------------------------
-# VARIABLE DECLARATION
-
-pdb_file = sys.argv[1]
-prmtop_file = sys.argv[2]
-traj_file = sys.argv[3]
-system = sys.argv[4]
-
 zeros = np.zeros
 dot_prod = np.dot
 sqrt = np.sqrt
 flush = sys.stdout.flush
+
+# ----------------------------------------
+# VARIABLE DECLARATION
+
+config_file = sys.argv[1]
+necessary_parameters = ['pdb_file','prmtop_file','traj_file','pocket_selection']
+all_parameters = ['pdb_file','prmtop_file','traj_file','pocket_selection','wat_resname','pocket_radius','number_of_wats_filename','center_of_geometry_filename','correlation_filename','long_lived_wat_filename','Wrapped','water_OH_bond_dist','summary','summary_filename']
 
 # ----------------------------------------
 # SUBROUTINES:
@@ -35,30 +34,46 @@ def ffprint(string):
 	print '%s' %(string)
 	flush()
 
-def summary(nSteps):
-	sum_file = open('%s.diffusion.summary' %(system),'w')
-	sum_file.write('Using MDAnalysis version: %s\n' %(MDAnalysis.version.__version__))
-	sum_file.write('To recreate this analysis, run this line:\n')
-	for i in range(len(sys.argv)):
-		sum_file.write('%s ' %(sys.argv[i]))
-	sum_file.write('\n\n')
-	sum_file.write('Reprinting the pocket_residues.py script for recreating this analysis:\n')
-	sum_file.write("wat_resname = '%s'\n pocket_sel = '%s'\n radius = %f" %(wat_resname,pocket_sel,radius)) 
-	sum_file.write('\n\n')
-	sum_file.write('Output files are:\n')
-	sum_file.write('	%s.nRes.dat 		--> holds the number of residues within the defined pocket\n' %(system))
-	sum_file.write('	%s.waters.dat 		--> holds the atom numbers of the water oxygens that are within the defined pocket\n' %(system))
-	sum_file.write('	%s.cog.xyz		--> A XYZ trajectory of the Center Of Geometry (COG) of the defined pocket; waters within radius of this point are considered within the defined pocket; Note you should always check that the radius is accurately describing all timesteps in your trajectory...\n' %(system))
-	sum_file.write('	%s.msd.pocket.dat 	--> holds the dt, counts, <MSD>, and <MSD^2> data of waters within the defined pocket\n' %(system))
-	sum_file.write('	%s.long_lived.dat	--> outputs a vmd atomselection to use to show the long lived waters in the un-truncated trajectories\n' %(system))
-	sum_file.close()
+def config_parser(config_file):	# Function to take config file and create/fill the parameter dictionary 
+	for i in range(len(necessary_parameters)):
+		parameters[necessary_parameters[i]] = ''
+
+	# SETTING DEFAULT PARAMETERS FOR OPTIONAL PARAMETERS:
+	parameters['wat_resname'] = 'WAT'
+	parameters['pocket_radius'] = 6.0
+	parameters['number_of_wats_filename'] = 'num_wats_pocket.dat'
+	parameters['wat_res_nums_filename'] = 'res_nums_wats.dat'
+	parameters['correlation_filename'] = 'autocorrelation.dat'
+	parameters['long_lived_wat_filename'] = 'long_lived_wats.vmd'
+	parameters['Wrapped'] = True
+	parameters['water_OH_bond_dist'] = 0.9572 		# assumes the use of TIP3P water model
+	parameters['summary'] = True
+	parameters['summary_filename'] = 'water_diffusion_analysis.summary'
+
+	# GRABBING PARAMETER VALUES FROM THE CONFIG FILE:
+	execfile(config_file,parameters)
+	for key, value in parameters.iteritems():
+		if value == '':
+			print '%s has not been assigned a value. This variable is necessary for the script to run. Please declare this variable within the config file.'
+			sys.exit()
+
+def summary(filename):
+	with open(filename,'w') as W:
+		W.write('Using MDAnalysis version: %s\n' %(MDAnalysis.version.__version__))
+		W.write('To recreate this analysis, run this line:\n')
+		for i in range(len(sys.argv)):
+			W.write('%s ' %(sys.argv[i]))
+		W.write('\n\nParameters used:\n')
+		for i in all_parameters:
+			W.write('%s = %s \n' %(i,parameters[i]))
+		W.write('\n\n')
 
 # ----------------------------------------
 # MAIN:
 ffprint('Loading Analysis Universe.')
 u = MDAnalysis.Universe(parameters['prmtop_file'],parameters['pdb_file'])
 u_all = u.select_atoms('all')
-wat = u.select_atoms(parameters['wat_resname'])
+wat = u.select_atoms('resname %s' %(parameters['wat_resname']))
 u_pocket = u.select_atoms(parameters['pocket_selection'])
 
 ffprint('Grabbing the Positions of the Binding Pocket to use as reference.')
@@ -77,9 +92,9 @@ if nWats*3 != wat.n_atoms:
 	sys.exit()
 
 # Memory Declaration
-oxygen_Coord = np.full((nSteps,nWats,3),np.nan)		# array holding all xyz data for water oxygens within the binding pocket; need initialize this array for all water residues since any residue could find its way into the pocket; filling this array with nan values for subsequent easy replacement and testing.
-OH_vector = np.full(nSteps,nWats,3),np.nan)
-msd = zeros((nSteps,3),dtype=np.float64)		# array holding the msd data
+oxygen_Coord = np.full((nSteps,nWats,3),np.nan)		# array holding all xyz data for water oxygens within the binding pocket; need to initialize this array for all water residues since any residue could find its way into the pocket; filling this array with nan values for subsequent easy replacement and testing.
+OH_vector = np.full(nSteps,nWats,3),np.nan)		# array holding the O-H bond vector for waters within the binding pocket; need to initialize this array for all water residues since any residue could find its way into the pocket; filling this array with nan values for subsequent easy replacement and testing.
+correlation_data = zeros((nSteps,4),dtype=np.float64)		# array holding the msd/bond autocorrelation data
 
 with open(parameters['number_of_wats_filename'],'w') as X, open(parameters['wat_res_nums_filename'],'w') as Y, open(parameters['center_of_geometry_filename'],'w') as Z:
 	ffprint('Beginning trajectory analysis')
@@ -101,7 +116,7 @@ with open(parameters['number_of_wats_filename'],'w') as X, open(parameters['wat_
 		R, rmsd = rotation_matrix(u_pocket.positions,pocket_ref)	# Calculate the rotational matrix to align u to the ref, using the pocket selection as the reference selection
 		u_all.rotate(R)
 	
-		pocket_waters = wat.select_atoms('byres point 0 0 0 %d' %(parameters['radius'])) # Atom selection for the waters within radius angstroms of the COG of the pocket; Assumes that the COG of the pocket is at 0,0,0 xyz coordinates (which it should be bc the translational motion of the pocket is removed...
+		pocket_waters = wat.select_atoms('byres point 0 0 0 %d' %(parameters['pocket_radius'])) # Atom selection for the waters within radius angstroms of the COG of the pocket; Assumes that the COG of the pocket is at 0,0,0 xyz coordinates (which it should be bc the translational motion of the pocket is removed...
 	
 		nRes = pocket_waters.n_residues		# Calculate the number of wates within the pocket volume
 		X.write('%d\n' %(nRes))		# Outputting the number of water residues at timestep ts
@@ -125,25 +140,32 @@ for i in range(nWats):		# Looping through all water residues.
 		if oxygen_Coord[j,i,0] == oxygen_Coord[j,i,0]:	# boolean test to see if array object has a nan value or not; nan values will not equate and produce a FALSE;
 			dt=1
 			pos0 = oxygen_Coord[j,i,:]
-
+			vec0 = OH_vector[j,i,:]
 			while (j+dt)<nSteps and oxygen_Coord[j+dt,i,0] == oxygen_Coord[j+dt,i,0]:	# 
 				if dt == 200 and i+nRes0+1 not in long_lived:	# the water molecule has resided in the pocket for 200 frames (or more) AND has not been added to the set already;
 					long_lived.add(i+nRes0+1)	# saving the one-indexed residue index for long-lived water molecules 
+				
 				pos1 = oxygen_Coord[j+dt,i,:]
+				vec1 = OH_vector[j+dt,i,:]
+
 				dist, dist2 = euclid_dist(pos0,pos1)	# Calculates the MSD of the oxygen atoms in the water molecule
-				msd[dt,0]+=1		# count array element
-				msd[dt,1]+= dist2	# sum of MSD values
-				msd[dt,2]+= dist2**2	# sum of MSD^2 values
+				scalar_product = dot_prod(vec0,vec1)
+
+				correlation_data[dt,0]+=1		# count array element
+				correlation_data[dt,1]+= dist2	# sum of MSD values
+				correlation_data[dt,2]+= dist2**2	# sum of MSD^2 values
+				correlation_data[dt,3]+= scalar_product
 				dt+=1			# increment the dt value
 
 ffprint('Finished with dist2 calculations. Beginning to average and print out msd values')
 
-with open(parameters['msd_filename'],'w') as W:
+with open(parameters['correlation_filename'],'w') as W:
 	for i in range(1,nSteps):
-		if msd[i,0]>1.0:
-			msd[i,1]/=msd[i,0]	# Finish the average of the MSD value for the dt
-			msd[i,2]/=msd[i,0]	# Finish the average of the MSD^2 value for the dt
-		W.write('%10.d   %10.d   %10.6f   %10.6f \n' %(i,msd[i,0],msd[i,1],msd[i,2]))
+		if correlation_data[i,0]>1.0:
+			correlation_data[i,1]/=correlation_data[i,0]	# Finish the average of the MSD value for the dt
+			correlation_data[i,2]/=correlation_data[i,0]	# Finish the average of the MSD^2 value for the dt
+			correlation_data[i,3]/=correlation_data[i,0]	# Finish the average of the Velocity*Velocity autocorrelation 
+		W.write('%10.d   %10.d   %10.6f   %10.6f   %10.6f \n' %(i,correlation_data[i,0],correlation_data[i,1],correlation_data[i,2],correlation_data[i,3]))
 
 ffprint('Writing the unique TIP3 oxygen numbers that are found to be within the binding pocket for longer than 200 frames.')
 with open(parameters['long_lived_wat_filename'],'w') as W:
@@ -153,10 +175,6 @@ with open(parameters['long_lived_wat_filename'],'w') as W:
 		W. write('%d '%(ll_list[i]))
 	W.write('\n')
 
-### NEED TO ADD THE ANGULAR DIFFUSION ANALYSIS....
-
-
-
-
-summary(nSteps)
+if parameters['summary']:
+	summary(parameters['summary_filename'])
 

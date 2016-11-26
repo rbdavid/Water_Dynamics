@@ -8,6 +8,8 @@ radius =
 number_of_wats_filename = 	# File to print out the number of residues within the binding pocket
 wat_atom_nums_filename = 	# File to print out the atom numbers of the oxygen atom of TIP3 residues within the binding pocket selection
 center_of_geometry_filename = 	# File to print a vmd xyz trajectory showing the motion of the COG of the binding pocket selection
+correlation_filename = 
+long_lived_wat_filename = 
 water_OH_bond_dist =   
 
 
