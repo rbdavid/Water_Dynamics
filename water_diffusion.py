@@ -54,7 +54,7 @@ def config_parser(config_file):	# Function to take config file and create/fill t
 	execfile(config_file,parameters)
 	for key, value in parameters.iteritems():
 		if value == '':
-			print '%s has not been assigned a value. This variable is necessary for the script to run. Please declare this variable within the config file.'
+			print '%s has not been assigned a value. This variable is necessary for the script to run. Please declare this variable within the config file.' %(key)
 			sys.exit()
 
 def summary(filename):
@@ -87,7 +87,7 @@ u_all.translate(-u_pocket.center_of_geometry())
 pocket_ref = u_pocket.positions
 
 ffprint('Loading in the trajectory.')
-u.load_new(parameters['traj_file'],format='nc')
+u.load_new(parameters['traj_file'])
 
 nSteps = len(u.trajectory)		# number of steps
 nWats = wat.n_residues			# number of water residues

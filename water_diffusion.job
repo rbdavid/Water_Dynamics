@@ -29,7 +29,7 @@ do
 		mkdir MSD.$prod
 		cd MSD.$prod
 		sed -e s%AAA%$AAA%g -e s%BBB%$BBB%g -e s%CCC%$CCC%g -e s%XXX%$XXX%g < ../../sample.config > water_diffusion.MSD.$prod.config 
-		time ../../water_diffusion.py water_diffusion.MSD.$prod.config & 
+		time ../../water_diffusion.py water_diffusion.MSD.$prod.config > Diffusion.$prod.output & 
 		cd ../
 		((j=$j+1))
 		((prod=$prod+$STEP))
