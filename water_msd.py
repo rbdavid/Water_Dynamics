@@ -92,7 +92,6 @@ u.load_new(parameters['traj_file'])
 nSteps = len(u.trajectory)		# number of steps
 nWats = wat.n_residues			# number of water residues
 nRes0 = wat.residues[0].resid		# residue index is 0 indexed 
-print nRes0, u_all.residues[0].resid
 
 if nWats*3 != wat.n_atoms:
 	ffprint('nWats*3 != wat.n_atoms. Unexpected number of water atoms. Possible selection error with water residue name.')
@@ -137,7 +136,6 @@ with open(parameters['number_of_wats_filename'],'w') as X, open(parameters['wat_
 			res_index = res.resid-1			# grabbing the resid of the residue; needs to be zero-indexed for appropriate array assignment
 			ox_pos = res.select_atoms('name %s' %(parameters['wat_O_name'])).positions[0]
 			hy_pos = res.select_atoms('name %s' %(parameters['wat_H_name'])).positions[0]
-			print ox_pos,hy_pos
 			oxygen_Coord[timestep,res_index,:] = ox_pos
 			OH_vector[timestep,res_index,:] = (ox_pos - hy_pos)/parameters['water_OH_bond_dist'] # NO NEED TO CALC THE MAGNITUDE OF THIS VECTOR BECAUSE I KNOW IF FROM THE PARAMETERS OF TIP3 (OR OTHER WATER MODEL) 
 			Y.write('%d   ' %(res_index+1))	# atom_num is zero-indexed; for vmd, need one-indexed values...

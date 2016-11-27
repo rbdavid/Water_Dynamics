@@ -4,6 +4,8 @@ prmtop_file = 'test.prmtop'
 traj_file = 'test.5_frames.dcd'
 #pocket_selection = 'protein and resid 194:202 227 230 231 284 285 314 316 412:416 455 456 459 460 463'
 pocket_selection = 'protein and resid 27:35 60 63:64 117:118 147 149 159 245:249 288:289 292:293 296'
+wat_O_name = 'O'
+wat_H_name = 'H1'
 
 # OPTIONAL PARAMETERS
 wat_resname = 'WAT'
