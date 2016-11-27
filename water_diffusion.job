@@ -1,0 +1,39 @@
+#!/bin/bash 
+#SBATCH --job-name=AMBER_ssrna_atp.msd
+#SBATCH --output=Diffusion.output 
+#SBATCH --time=96:00:00 
+#SBATCH --nodes=1
+#SBATCH --exclusive 
+
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/software/usr/gcc-4.9.2/lib64"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/software/usr/hpcx-v1.2.0-292-gcc-MLNX_OFED_LINUX-2.4-1.0.0-redhat6.6/ompi-mellanox-v1.8/lib"
+
+export PYTHON_EGG_CACHE="./"
+
+AAA=../amber_ssrna_atp.pdb
+BBB=../../../AMBER_ssrna_atp.prmtop
+
+prod=5		# production run # to start with
+NPRODS=150	# last production run # 
+NCPUS=4		# number of cpus to be used in this job
+STEP=5		# step # of the production runs to perform this analysis on
+
+for ((i=1,1<=10;i++))
+do
+	j=1
+	while ((j<=$NCPUS)) && (($prod<=$NPRODS))
+	do
+		echo $i $j $prod
+		CCC=../../../AMBER_ssrna_atp/MSD.$prod/*mdcrd
+		XXX=AMBER_ssrna_atp.MSD.$prod
+		mkdir MSD.$prod
+		cd MSD.$prod
+		sed -e s/AAA/$AAA/g -e s/BBB/$BBB/g -e s/CCC/$CCC/g -e s/XXX/$XXX/g < ../water_msd.job > wat_diffusion.MSD.$prod.config 
+		time ../../wat_diffusion.py wat_diffusion.MSD.$prod.config & 
+		cd ../
+		((j=$j+1))
+		((prod=$prod+$STEP))
+	done
+	wait
+done
+
