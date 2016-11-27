@@ -1,5 +1,5 @@
-#!/Library/Frameworks/Python.framework/Versions/2.7/bin/python
-##!/mnt/lustre_fs/users/mjmcc/apps/python2.7/bin/python
+#!/mnt/lustre_fs/users/mjmcc/apps/python2.7/bin/python
+##!/Library/Frameworks/Python.framework/Versions/2.7/bin/python
 # ----------------------------------------
 # USAGE:
 
@@ -87,7 +87,7 @@ u_all.translate(-u_pocket.center_of_geometry())
 pocket_ref = u_pocket.positions
 
 ffprint('Loading in the trajectory.')
-u.load_new(parameters['traj_file'])
+u.load_new(parameters['traj_file'],format='nc')
 
 nSteps = len(u.trajectory)		# number of steps
 nWats = wat.n_residues			# number of water residues

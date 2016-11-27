@@ -28,8 +28,8 @@ do
 		XXX=AMBER_ssrna_atp.MSD.$prod
 		mkdir MSD.$prod
 		cd MSD.$prod
-		sed -e s/AAA/$AAA/g -e s/BBB/$BBB/g -e s/CCC/$CCC/g -e s/XXX/$XXX/g < ../water_msd.job > wat_diffusion.MSD.$prod.config 
-		time ../../wat_diffusion.py wat_diffusion.MSD.$prod.config & 
+		sed -e s%AAA%$AAA%g -e s%BBB%$BBB%g -e s%CCC%$CCC%g -e s%XXX%$XXX%g < ../../sample.config > water_diffusion.MSD.$prod.config 
+		time ../../water_diffusion.py water_diffusion.MSD.$prod.config & 
 		cd ../
 		((j=$j+1))
 		((prod=$prod+$STEP))
