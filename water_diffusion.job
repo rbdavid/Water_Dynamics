@@ -11,7 +11,7 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/software/usr/hpcx-v1.2.0-292-gcc-MLNX_
 export PYTHON_EGG_CACHE="./"
 
 AAA=../amber_ssrna_atp.pdb
-BBB=../../../AMBER_ssrna_atp.prmtop
+BBB=../../../../../AMBER_ssrna_atp/amber_ssrna_atp.prmtop
 
 prod=5		# production run # to start with
 NPRODS=150	# last production run # 
@@ -24,7 +24,7 @@ do
 	while ((j<=$NCPUS)) && (($prod<=$NPRODS))
 	do
 		echo $i $j $prod
-		CCC=../../../AMBER_ssrna_atp/MSD.$prod/*mdcrd
+		CCC=../../../../../AMBER_ssrna_atp/MSD.$prod/*dcd
 		XXX=AMBER_ssrna_atp.MSD.$prod
 		mkdir MSD.$prod
 		cd MSD.$prod
