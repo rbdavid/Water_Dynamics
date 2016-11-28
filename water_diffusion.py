@@ -133,12 +133,12 @@ with open(parameters['number_of_wats_filename'],'w') as X, open(parameters['wat_
 		timestep = ts.frame
 		for i in range(nRes):
 			res = pocket_waters.residues[i]		#
-			res_index = res.resid-1			# grabbing the resid of the residue; needs to be zero-indexed for appropriate array assignment
+			res_index = res.resid-nRes0			# grabbing the resid of the residue; needs to be zero-indexed for appropriate array assignment
 			ox_pos = res.select_atoms('name %s' %(parameters['wat_O_name'])).positions[0]
 			hy_pos = res.select_atoms('name %s' %(parameters['wat_H_name'])).positions[0]
 			oxygen_Coord[timestep,res_index,:] = ox_pos
 			OH_vector[timestep,res_index,:] = (ox_pos - hy_pos)/parameters['water_OH_bond_dist'] # NO NEED TO CALC THE MAGNITUDE OF THIS VECTOR BECAUSE I KNOW IF FROM THE PARAMETERS OF TIP3 (OR OTHER WATER MODEL) 
-			Y.write('%d   ' %(res_index+1))	# atom_num is zero-indexed; for vmd, need one-indexed values...
+			Y.write('%d   ' %(res_index+nRes0))	# atom_num is zero-indexed; for vmd, need one-indexed values...
 		Y.write('\n')
 
 ffprint('Done with saving coordinates of waters within the pocket, O-H bond vectors, writing COG traj, etc.\n Beginning msd calculations.')

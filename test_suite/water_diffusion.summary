@@ -1,6 +1,6 @@
 Using MDAnalysis version: 0.15.0
 To recreate this analysis, run this line:
-./water_msd.py wat_diffusion.config 
+./water_diffusion.py wat_diffusion.config 
 
 Parameters used:
 pdb_file = test.pdb 

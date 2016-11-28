@@ -1,0 +1,21 @@
+axes location off 
+
+mol new test.prmtop 
+mol addfile test.10_frames.dcd first 0 last 10 step 2
+mol modselect 0 0 "protein"
+mol modstyle 0 0 "NewCartoon"
+mol modcolor 0 0 "SecondaryStructure"
+mol addrep 0
+mol modselect 1 0 "nucleic or resname atp adp MG"
+mol modstyle 1 0 "Licorice"
+mol modcolor 1 0 "Name"
+
+mol new COG_pocket.xyz first 0 last 10 step 2
+set sel [atomselect top "name X"]
+$sel set radius 8.0
+mol modselect 0 1 "name X"
+mol modstyle 0 1 "VDW"
+mol modmaterial 0 1 "Transparent"
+mol modcolor 0 1 "ColorID 23"
+
+display projection Orthographic

@@ -24,7 +24,7 @@ do
 	while ((j<=$NCPUS)) && (($prod<=$NPRODS))
 	do
 		echo $i $j $prod
-		CCC=../../../../../AMBER_ssrna_atp/MSD.$prod/*dcd
+		CCC=../../../../../AMBER_ssrna_atp/MSD.$prod/amber_ssrna_atp.msd.$prod.dcd
 		XXX=AMBER_ssrna_atp.MSD.$prod
 		mkdir MSD.$prod
 		cd MSD.$prod
