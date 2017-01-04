@@ -1,0 +1,16 @@
+# VMD Visualization State - COG of protein pocket within which water dynamics are analyzed; Written by RBD
+# Load into VMD using "vmd -e COG_vis_state.vmd 
+
+mol new test.prmtop
+ mol addfile test.10_frames.dcd step 2
+ mol modselect 0 0 "protein"
+ mol modstyle 0 0 "NewCartoon"
+
+ mol new COG_pocket.test.xyz step 2
+ set sel [atomselect top "name X"]
+ $sel set radius 8
+mol modselect 0 1 "name X"
+ mol modstyle 0 1 "VDW"
+ mol modmaterial 0 1 "Transparent"
+ mol modcolor 0 1 "ColorID 23"
+
