@@ -4,6 +4,8 @@ __pycache__/
 *$py.class
 *py~
 *~
+*.pyc
+
 # C extensions
 *.so
 
@@ -52,7 +54,6 @@ coverage.xml
 
 # Django stuff:
 *.log
-<<<<<<< HEAD
 local_settings.py
 
 # Flask stuff:
@@ -61,8 +62,6 @@ instance/
 
 # Scrapy stuff:
 .scrapy
-=======
->>>>>>> temp/master
 
 # Sphinx documentation
 docs/_build/
@@ -70,7 +69,6 @@ docs/_build/
 # PyBuilder
 target/
 
-<<<<<<< HEAD
 # IPython Notebook
 .ipynb_checkpoints
 
@@ -92,7 +90,5 @@ ENV/
 
 # Rope project settings
 .ropeproject
-=======
 #Ipython Notebook
 .ipynb_checkpoints
->>>>>>> temp/master
