@@ -130,9 +130,9 @@ if parameters['exclude_waters_bool']:
 	
 			R, rmsd = rotation_matrix(u_pocket.positions,pocket_ref)	# Calculate the rotational matrix to align u to the ref, using the pocket selection as the reference selection
 			u_all.rotate(R)
-		
-			pocket_waters = wat.select_atoms('byres point 0 0 0 %d' %(parameters['pocket_radius'])) # Atom selection for the waters within radius angstroms of the COG of the pocket; Assumes that the COG of the pocket is at 0,0,0 xyz coordinates (which it should be bc the translational motion of the pocket is removed...
-			exclude_waters = pocket_waters.select_atoms('not %s'%(parameters['exclude_waters_selection']))
+
+			pocket_waters = u.select_atoms('resname %s and byres point 0 0 0 %d' %(parameters['wat_resname'],parameters['pocket_radius'])) # Atom selection for the waters within radius angstroms of the COG of the pocket; Assumes that the COG of the pocket is at 0,0,0 xyz coordinates (which it should be bc the translational motion of the pocket is removed...
+			exclude_waters = u.select_atoms('resname %s and byres point 0 0 0 %d and not %s' %(parameters['wat_resname'],parameters['pocket_radius'],parameters['exclude_waters_selection']))
 
 			nRes = pocket_waters.n_residues		# Calculate the number of waters within the pocket volume
 			exclude_nRes = exclude_waters.n_residues	# Calculate the number of waters within the pocket volume that aren't excluded

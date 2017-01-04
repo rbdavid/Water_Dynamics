@@ -1,0 +1,27 @@
+Using MDAnalysis version: 0.15.0
+To recreate this analysis, run this line:
+./water_diffusion.py wat_diffusion.config 
+
+Parameters used:
+pdb_file = test.pdb 
+prmtop_file = test.prmtop 
+traj_file = test.10_frames.dcd 
+pocket_selection = protein and resid 27:35 60 63:64 117:118 147 149 159 245:249 288:289 292:293 296 
+wat_resname = WAT 
+pocket_radius = 8.0 
+number_of_wats_filename = excluded_num_wats_pocket.test.dat 
+wat_res_nums_filename = excluded_res_nums_wats_pockets.test.dat 
+center_of_geometry_filename = excluded_COG_pocket.test.xyz 
+correlation_filename = excluded_autocorrelation.test.dat 
+long_lived_wat_filename = excluded_long_lived_wats.vmd 
+Wrapped = True 
+water_OH_bond_dist = 0.9572 
+summary_bool = True 
+summary_filename = excluded_water_diffusion.summary 
+exclude_waters_bool = True 
+exclude_waters_selection = around 5 resid 33 
+VMD_vis_bool = True 
+VMD_vis_filename = excluded_COG_vis_state.vmd 
+VMD_step = 2 
+
+
