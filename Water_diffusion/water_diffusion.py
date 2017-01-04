@@ -131,8 +131,8 @@ if parameters['exclude_waters_bool']:
 			R, rmsd = rotation_matrix(u_pocket.positions,pocket_ref)	# Calculate the rotational matrix to align u to the ref, using the pocket selection as the reference selection
 			u_all.rotate(R)
 		
-			pocket_waters = wat.select_atoms('byres point 0 0 0 %d' %(parameters['pocket_radius'])) # Atom selection for the waters within radius angstroms of the COG of the pocket; Assumes that the COG of the pocket is at 0,0,0 xyz coordinates (which it should be bc the translational motion of the pocket is removed...
-			exclude_waters = pocket_waters.select_atoms('not %s'%(parameters['exclude_waters_selection']))
+			pocket_waters = u.select_atoms('resname %s and byres point 0 0 0 %d' %(parameters['wat_resname'],parameters['pocket_radius'])) # Atom selection for the waters within radius angstroms of the COG of the pocket; Assumes that the COG of the pocket is at 0,0,0 xyz coordinates (which it should be bc the translational motion of the pocket is removed...
+			exclude_waters = u.select_atoms('resname %s and byres point 0 0 0 %d and not %s' %(parameters['wat_resname'],parameters['pocket_radius'],parameters['exclude_waters_selection']))
 
 			nRes = pocket_waters.n_residues		# Calculate the number of waters within the pocket volume
 			exclude_nRes = exclude_waters.n_residues	# Calculate the number of waters within the pocket volume that aren't excluded
@@ -187,7 +187,7 @@ else:
 				Y.write('%d   ' %(res_index+nRes0))	# atom_num is zero-indexed; for vmd, need one-indexed values...
 			Y.write('\n')
 	
-	ffprint('Done with saving coordinates of waters within the pocket, O-H bond vectors, writing COG traj, etc.\n Beginning msd calculations.')
+	ffprint('Done with saving coordinates of waters within the pocket, O-H bond vectors, writing COG traj, etc.\nBeginning msd calculations.')
 
 # ------------------------------------------
 # ANALYSIS OF TRAJECTORY DATA - MSD AND O-H BOND AUTOCORRELATION AND LONG-LIVED WATER RESIDUES
@@ -241,7 +241,7 @@ with open(parameters['long_lived_wat_filename'],'w') as W:
 
 if parameters['VMD_vis_bool']:
 	with open(parameters['VMD_vis_filename'],'w') as W:
-		W.write('# VMD Visualization State - COG of protein pocket within which water dynamics are analyzed; Written by RBD\n# Load into VMD using "vmd -e %s \n\nmol new %s\n mol addfile %s step %d\n mol modselect 0 0 "protein"\n mol modstyle 0 0 "NewCartoon"\n\n mol new %s step %d\n set sel [atomselect top "name X"]\n $sel set radius %d\nmol modselect 0 1 "name X"\n mol modstyle 0 1 "VDW"\n mol modmaterial 0 1 "Transparent"\n mol modcolor 0 1 "ColorID 23"\n\n'%(parameters['VMD_vis_filename'],parameters['prmtop_file'],parameters['traj_file'],parameters['VMD_step'],parameters['center_of_geometry_filename'],parameters['VMD_step'],parameters['pocket_radius']))
+		W.write('# VMD Visualization State - COG of protein pocket within which water dynamics are analyzed; Written by RBD\n# Load into VMD using "vmd -e %s\n\nmol new %s\nmol addfile %s step %d\nmol modselect 0 0 "protein"\nmol modstyle 0 0 "NewCartoon"\n\nmol new %s step %d\nset sel [atomselect top "name X"]\n$sel set radius %d\nmol modselect 0 1 "name X"\nmol modstyle 0 1 "VDW"\nmol modmaterial 0 1 "Transparent"\nmol modcolor 0 1 "ColorID 23"\n\n'%(parameters['VMD_vis_filename'],parameters['prmtop_file'],parameters['traj_file'],parameters['VMD_step'],parameters['center_of_geometry_filename'],parameters['VMD_step'],parameters['pocket_radius']))
 
 # ----------------------------------------
 # OUTPUTTING SUMMARY OF THE ANALYSIS
