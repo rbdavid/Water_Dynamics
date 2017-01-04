@@ -11,7 +11,6 @@ import MDAnalysis
 from MDAnalysis.analysis.align import *
 from MDAnalysis.analysis.rms import *
 import sys
-import os
 
 # ----------------------------------------
 # VARIABLE DECLARATION
