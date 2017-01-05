@@ -23,7 +23,8 @@ flush = sys.stdout.flush
 
 config_file = sys.argv[1]
 
-necessary_parameters = ['pdb_file','prmtop_file','traj_file','pocket_selection','wat_O_name','wat_H_name']
+necessary_parameters = ['pdb','traj_loc','start','end','pocket_selection','pocket_radius','wat_resname']
+
 all_parameters = ['pdb_file','prmtop_file','traj_file','pocket_selection','wat_resname','pocket_radius','number_of_wats_filename','wat_res_nums_filename','center_of_geometry_filename','correlation_filename','long_lived_wat_filename','Wrapped','water_OH_bond_dist','summary_bool','summary_filename','exclude_waters_bool','exclude_waters_selection','VMD_vis_bool','VMD_vis_filename','VMD_step']
 
 # ----------------------------------------
@@ -43,14 +44,10 @@ def config_parser(config_file):	# Function to take config file and create/fill t
 	parameters['number_of_wats_filename'] = 'num_wats_pocket.dat'
 	parameters['wat_res_nums_filename'] = 'res_nums_wats.dat'
 	parameters['center_of_geometry_filename'] = 'COG_pocket.xyz'
-	parameters['correlation_filename'] = 'autocorrelation.dat'
 	parameters['long_lived_wat_filename'] = 'long_lived_wats.vmd'
 	parameters['Wrapped'] = True
-	parameters['water_OH_bond_dist'] = 0.9572 		# assumes the use of TIP3P water model
 	parameters['summary_bool'] = True
 	parameters['summary_filename'] = 'water_diffusion_analysis.summary'
-	parameters['exclude_waters_bool'] = False
-	parameters['exclude_waters_selection'] = None
 	parameters['VMD_vis_bool'] = False
 	parameters['VMD_vis_filename'] = 'COG_vis_state.vmd'
 	parameters['VMD_step'] = 100
@@ -90,13 +87,6 @@ u_pocket = u.select_atoms(parameters['pocket_selection'])
 ffprint('Grabbing the Positions of the Binding Pocket to use as reference.')
 u_all.translate(-u_pocket.center_of_geometry())
 pocket_ref = u_pocket.positions
-
-ffprint('Loading in the trajectory.')
-u.load_new(parameters['traj_file'])
-
-nSteps = len(u.trajectory)		# number of steps
-nWats = wat.n_residues			# number of water residues
-nRes0 = wat.residues[0].resid		# residue index is 0 indexed 
 
 if nWats*3 != wat.n_atoms:
 	ffprint('nWats*3 != wat.n_atoms. Unexpected number of water atoms. Possible selection error with water residue name.')
