@@ -25,7 +25,7 @@ config_file = sys.argv[1]
 
 necessary_parameters = ['pdb','traj_loc','start','end','pocket_selection','pocket_radius','wat_resname']
 
-all_parameters = ['pdb_file','prmtop_file','traj_file','pocket_selection','wat_resname','pocket_radius','number_of_wats_filename','wat_res_nums_filename','center_of_geometry_filename','COG_delta_write','water_retention_filename','correlation_filename','Wrapped','summary_bool','summary_filename']
+all_parameters = ['pdb_file','prmtop_file','traj_file','pocket_selection','wat_resname','pocket_radius','number_of_wats_filename','wat_res_nums_filename','center_of_geometry_filename','COG_delta_write','water_retention_filename','Wrapped','summary_bool','summary_filename']
 
 # ----------------------------------------
 # SUBROUTINES:
