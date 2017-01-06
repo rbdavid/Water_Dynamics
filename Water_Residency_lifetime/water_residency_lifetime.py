@@ -23,9 +23,9 @@ flush = sys.stdout.flush
 
 config_file = sys.argv[1]
 
-necessary_parameters = ['pdb','traj_loc','start','end','pocket_selection','pocket_radius','wat_resname']
+necessary_parameters = ['pdb_file','traj_loc','start','end','pocket_selection','pocket_radius','wat_resname']
 
-all_parameters = ['pdb_file','prmtop_file','traj_file','pocket_selection','wat_resname','pocket_radius','number_of_wats_filename','wat_res_nums_filename','center_of_geometry_filename','COG_delta_write','water_retention_filename','Wrapped','summary_bool','summary_filename']
+all_parameters = ['pdb_file','prmtop_file','traj_loc','pocket_selection','wat_resname','pocket_radius','number_of_wats_filename','wat_res_nums_filename','center_of_geometry_filename','COG_delta_write','water_retention_filename','Wrapped','summary_bool','summary_filename']
 
 # ----------------------------------------
 # SUBROUTINES:
@@ -139,6 +139,7 @@ with open(parameters['number_of_wats_filename'],'w') as X, open(parameters['wat_
 				res = pocket_waters.residues[i]	
 				Y.write('%d   ' %(res.resid))	
 			Y.write('\n')
+		start += 1
 
 ffprint('Done with saving residue numbers of binding pocket waters.\nBeginning retention lifetime calculations.')
 
@@ -176,7 +177,7 @@ for i in range(nSteps-1):
 # ----------------------------------------
 # OUTPUTTING DATA TO FILE
 with open(parameters['water_retention_filename'],'w') as W:
-	for i in range(nSteps):
+	for i in range(1,nSteps):
 		retention_data[i][1] /= retention_data[i][0]
 		retention_data[i][2] /= retention_data[i][0]
 		retention_data[i][2] -= retention_data[i][1]**2
