@@ -25,7 +25,7 @@ config_file = sys.argv[1]
 
 necessary_parameters = ['pdb','traj_loc','start','end','pocket_selection','pocket_radius','wat_resname']
 
-all_parameters = ['pdb_file','prmtop_file','traj_file','pocket_selection','wat_resname','pocket_radius','number_of_wats_filename','wat_res_nums_filename','center_of_geometry_filename','correlation_filename','long_lived_wat_filename','Wrapped','water_OH_bond_dist','summary_bool','summary_filename','exclude_waters_bool','exclude_waters_selection','VMD_vis_bool','VMD_vis_filename','VMD_step']
+all_parameters = ['pdb_file','prmtop_file','traj_file','pocket_selection','wat_resname','pocket_radius','number_of_wats_filename','wat_res_nums_filename','center_of_geometry_filename','COG_delta_write','water_retention_filename','correlation_filename','Wrapped','summary_bool','summary_filename']
 
 # ----------------------------------------
 # SUBROUTINES:
@@ -44,13 +44,11 @@ def config_parser(config_file):	# Function to take config file and create/fill t
 	parameters['number_of_wats_filename'] = 'num_wats_pocket.dat'
 	parameters['wat_res_nums_filename'] = 'res_nums_wats.dat'
 	parameters['center_of_geometry_filename'] = 'COG_pocket.xyz'
-	parameters['long_lived_wat_filename'] = 'long_lived_wats.vmd'
+	parameters['COG_delta_write'] = 1000
+	parameters['water_retention_filename'] = 'water_retention_analysis.dat'
 	parameters['Wrapped'] = True
 	parameters['summary_bool'] = True
-	parameters['summary_filename'] = 'water_diffusion_analysis.summary'
-	parameters['VMD_vis_bool'] = False
-	parameters['VMD_vis_filename'] = 'COG_vis_state.vmd'
-	parameters['VMD_step'] = 100
+	parameters['summary_filename'] = 'water_retention_analysis.summary'
 
 	# GRABBING PARAMETER VALUES FROM THE CONFIG FILE:
 	execfile(config_file,parameters)
@@ -151,84 +149,39 @@ if nSteps != len(res_nums):
 	print 'Number of steps does not equal the number of elements within the res_nums, indicating a timestep where no waters are found in the binding pocket. At the moment, this is assumed to be a bad result.'
 	sys.exit()
 
-retention_array = np.zeros((nSteps,3),dtype=np.float64)
-for i in range(nSteps):		# Looping through all timesteps
-	temp_num_wats = len(res_nums[i])
-	for j in range(temp_num_wats):
+retention_matrix = np.zeros((nSteps,nSteps),dtype=np.float64)
+for initial_ts in range(nSteps-1):
+	initial_num_wats = len(res_nums[initial_ts])
+	initial_wats = res_nums[initial_ts]
+	wat_weight = 1./initial_num_wats
+	for j in range(initial_num_wats):
 		dt = 1
-		while i+dt<nSteps and res_nums[i][j] in res_nums[i+dt]:
-			retention_array[dt,0] += 1
-			retention_array
+		while (initial_ts+dt)<nSteps and initial_wats[j] in res_nums[initial_ts+dt]:
+			retention_matrix[initial_ts][initial_ts+dt] += wat_weight
+			dt += 1
+	
+	if initial_ts%10 == 0:
+		ffprint('Finished analyzing the retention time of waters in timestep %d'%(initial_ts))
 
-
-
-
+# ----------------------------------------
+# FINISHING THE AVERAGES
+retention_data = np.zeros((nSteps,3),dtype=np.float64)
 for i in range(nSteps-1):
-	temp = len(res_nums[i])
-	for j in range(i,nSteps):
+	for j in range(i+1,nSteps):
 		delta_t = j - i
-		retention = len(res_nums[i].intersection(res_nums[j]))
-		retention_array[delta_t,0] += 1				# counter of number of delta_t instances
-		retention_array[delta_t,1] += float(retention)		# number of waters that remained in the binding pocket between delta_t
-		retention_array[delta_t,2] += float(retention/temp)
-
-
-
-
-
-# ------------------------------------------
-# ANALYSIS OF TRAJECTORY DATA - MSD AND O-H BOND AUTOCORRELATION AND LONG-LIVED WATER RESIDUES
-
-long_lived = set()
-for i in range(nWats):		# Looping through all water residues.
-	for j in range(nSteps):	# Looping through all timesteps for a single water.
-		if oxygen_Coord[j,i,0] == oxygen_Coord[j,i,0]:	# boolean test to see if array object has a nan value or not; nan values will not equate and produce a FALSE;
-			dt=1
-			pos0 = oxygen_Coord[j,i,:]
-			vec0 = OH_vector[j,i,:]
-			while (j+dt)<nSteps and oxygen_Coord[j+dt,i,0] == oxygen_Coord[j+dt,i,0]:	# 
-				if dt == 200 and i+nRes0+1 not in long_lived:	# the water molecule has resided in the pocket for 200 frames (or more) AND has not been added to the set already;
-					long_lived.add(i+nRes0+1)	# saving the one-indexed residue index for long-lived water molecules 
-				
-				pos1 = oxygen_Coord[j+dt,i,:]
-				vec1 = OH_vector[j+dt,i,:]
-
-				dist, dist2 = euclid_dist(pos0,pos1)	# Calculates the MSD of the oxygen atoms in the water molecule
-				scalar_product = dot_prod(vec0,vec1)
-
-				correlation_data[dt,0]+=1		# count array element
-				correlation_data[dt,1]+= dist2	# sum of MSD values
-				correlation_data[dt,2]+= dist2**2	# sum of MSD^2 values
-				correlation_data[dt,3]+= scalar_product
-				dt+=1			# increment the dt value
-
-ffprint('Finished with dist2 calculations. Beginning to average and print out msd values')
+		retention_data[delta_t][0] +=1
+		retention_data[delta_t][1] += retention_matrix[i][j]
+		retention_data[delta_t][2] += retention_matrix[i][j]**2
 
 # ----------------------------------------
 # OUTPUTTING DATA TO FILE
-
-with open(parameters['correlation_filename'],'w') as W:
-	for i in range(1,nSteps):
-		if correlation_data[i,0]>1.0:
-			correlation_data[i,1]/=correlation_data[i,0]	# Finish the average of the MSD value for the dt
-			correlation_data[i,2]/=correlation_data[i,0]	# Finish the average of the MSD^2 value for the dt
-			correlation_data[i,3]/=correlation_data[i,0]	# Finish the average of the Velocity*Velocity autocorrelation 
-		W.write('%10.d   %10.d   %10.6f   %10.6f   %10.6f \n' %(i,correlation_data[i,0],correlation_data[i,1],correlation_data[i,2],correlation_data[i,3]))
-
-ffprint('Writing the unique TIP3 oxygen numbers that are found to be within the binding pocket for longer than 200 frames.')
-with open(parameters['long_lived_wat_filename'],'w') as W:
-	ll_list = list(long_lived)
-	W.write('resid ')
-	for i in range(len(ll_list)):
-		W. write('%d '%(ll_list[i]))
-	W.write('\n')
-
-# ----------------------------------------
-# OUTPUTTING VMD VIS STATE FILE
-
-if parameters['VMD_vis_bool']:
-	with open(parameters['VMD_vis_filename'],'w') as W:
-		W.write('# VMD Visualization State - COG of protein pocket within which water dynamics are analyzed; Written by RBD\n# Load into VMD using "vmd -e %s \n\nmol new %s\n mol addfile %s step %d\n mol modselect 0 0 "protein"\n mol modstyle 0 0 "NewCartoon"\n\n mol new %s step %d\n set sel [atomselect top "name X"]\n $sel set radius %d\nmol modselect 0 1 "name X"\n mol modstyle 0 1 "VDW"\n mol modmaterial 0 1 "Transparent"\n mol modcolor 0 1 "ColorID 23"\n\n'%(parameters['VMD_vis_filename'],parameters['prmtop_file'],parameters['traj_file'],parameters['VMD_step'],parameters['center_of_geometry_filename'],parameters['VMD_step'],parameters['pocket_radius']))
+with open(parameters['water_retention_filename'],'w') as W:
+	for i in range(nSteps):
+		retention_data[i][1] /= retention_data[i][0]
+		retention_data[i][2] /= retention_data[i][0]
+		retention_data[i][2] -= retention_data[i][1]**2
+		retention_data[i][2] = sqrt(retention_data[i][2])
+	np.savetxt(W,retention_data)
 
 # ----------------------------------------
 # OUTPUTTING SUMMARY OF THE ANALYSIS
