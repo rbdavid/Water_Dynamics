@@ -1,6 +1,6 @@
 Using MDAnalysis version: 0.15.0
 To recreate this analysis, run this line:
-./water_residency_lifetime.py sample.config 
+./water_retention.py sample.config 
 
 Parameters used:
 pdb_file = ../test.pdb 
