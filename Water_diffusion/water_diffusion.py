@@ -124,7 +124,7 @@ if parameters['exclude_waters_bool']:
 				dims = u.dimensions[:3]	# obtain dimension values to be used for wrapping atoms
 				dims2 = dims/2.0
 				for i in range(nWats):
-					temp = wat.reidues[i].atom[0].position
+					temp = wat.residues[i].atoms[0].position
 					t = wrapping(temp,dims,dims2)
 					wat.residues[i].translate(t)
 	
@@ -164,7 +164,7 @@ else:
 				dims = u.dimensions[:3]	# obtain dimension values to be used for wrapping atoms
 				dims2 = dims/2.0
 				for i in range(nWats):
-					temp = wat.reidues[i].atom[0].position
+					temp = wat.residues[i].atoms[0].position
 					t = wrapping(temp,dims,dims2)
 					wat.residues[i].translate(t)
 	
