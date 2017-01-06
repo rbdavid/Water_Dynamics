@@ -14,7 +14,7 @@ wat_res_nums_filename = res_nums_wats_pockets.test.dat
 center_of_geometry_filename = COG_pocket.test.xyz 
 COG_delta_write = 1 
 water_retention_filename = water_retention.dat 
-Wrapped = True 
+Wrapped = False 
 summary_bool = True 
 summary_filename = water_retention.summary 
 
