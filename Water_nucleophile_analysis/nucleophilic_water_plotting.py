@@ -56,7 +56,6 @@ def Nucleophilic_probability(dist_cutoff,dist_array,ang_cutoff,ang_array,timeste
 		sys.exit()
 	else:
 		for i in range(nWats):
-			if i == 0:
 			current_frame_number = timestep_array[i]
 			if dist_array[i]<dist_cutoff and ang_array[i]>ang_cutoff:	# DETERMINE IF THE WATER IS IN THE NUCLEOPHILIC POSITION
 				wat_count += 1						# IF IT IS, ADD TO THE COUNTER
