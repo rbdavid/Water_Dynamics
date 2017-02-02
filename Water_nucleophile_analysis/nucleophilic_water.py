@@ -86,6 +86,7 @@ atom2 = u.select_atoms(parameters['substrate_atom2'])
 # ANALYSIS OF TRAJECTORIES
 start = int(parameters['start'])
 end = int(parameters['end'])
+timestep = 0
 with open(parameters['nucl_wat_outputname'],'w') as W, open(parameters['avg_wat_outputname'],'w') as X, open(parameters['center_of_geometry_filename'],'w') as Y:
 	ffprint('Beginning trajectory analysis')
 	while start <= end:
@@ -121,7 +122,9 @@ with open(parameters['nucl_wat_outputname'],'w') as W, open(parameters['avg_wat_
 				dist, dist2 = euclid_dist(pos2,ox_pos)
 				attack_vector = (pos2 - ox_pos)/dist
 				attack_angle = arccos(dot(bond_vector,attack_vector))*unit_conversion
-				W.write('%f   %f\n'%(dist,attack_angle))
+				W.write('%d   %d   %f   %f\n'%(timestep,i,dist,attack_angle))
+			
+			timestep += 1
 
 		start += 1
 
