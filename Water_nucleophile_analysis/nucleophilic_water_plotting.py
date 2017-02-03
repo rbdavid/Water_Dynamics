@@ -12,6 +12,7 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 
+sqrt = np.sqrt
 nullfmt = NullFormatter()
 my_cmap = plt.cm.get_cmap('jet')
 my_cmap.set_under('w',alpha=0)
@@ -131,8 +132,10 @@ with open(parameters['nucleophile_water_postanalysis_output'],'w') as W:
 		wat_count, frame_count = Nucleophilic_probability(distance_cutoff,nucleophilic_water_data[first_index:last_index,2],angle_cutoff,nucleophilic_water_data[first_index:last_index,3],nucleophilic_water_data[first_index:last_index,0])
 		wat_prob = wat_count/float(frame_ranges[i][0])
 		frame_prob = frame_count/float(frame_ranges[i][0])
+		wat_prob_error = sqrt(wat_count)/float(frame_ranges[i][0]) 
+		frame_prob_error = sqrt(frame_count)/float(frame_ranges[i][0]) 
 
-		W.write('Total number of nucleophilic waters in this time range: %d\nProbability of waters being nucleophilic (includes frames with multiple nucleophilic waters): %f\nTotal number of frames with nucleophilic waters: %d\nProbability of a frame having a nucleophilc water: %f\n\n' %(wat_count,wat_prob,frame_count,frame_prob))
+		W.write('Total number of nucleophilic waters in this time range: %d\nProbability of waters being nucleophilic (includes frames with multiple nucleophilic waters): %f\nProbability error arrived at by sqrt rule of counting experiments: %f\nTotal number of frames with nucleophilic waters: %d\nProbability of a frame having a nucleophilc water: %f\nProbability error arrived at by sqrt rule of counting experiments: %f\n\n' %(wat_count,wat_prob,wat_prob_error,frame_count,frame_prob,frame_prob_error))
 
 # ----------------------------------------
 avg_water_data = np.loadtxt(parameters['average_water_datafile'])
