@@ -224,5 +224,5 @@ with open(parameters['average_water_postanalysis_output'],'w') as W:
 		avg_waters = np.sum(avg_water_data[first_index:last_index])
 		avg_waters /= i[0]
 		std_waters = np.std(avg_water_data[first_index:last_index])
-		W.write('Time range: %d to %d ns; average number of waters in the ATP binding pocket: avg %f st dev %f \n' %(i[0],i[1],avg_waters,std_waters))
+		W.write('Time range: %d to %d ns; average number of waters in the ATP binding pocket: avg %f st dev %f \n' %(i[1],i[2],avg_waters,std_waters))
 	
